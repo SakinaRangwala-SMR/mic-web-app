@@ -21,13 +21,16 @@ async function startMic() {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     source = audioContext.createMediaStreamSource(stream);
 
-    // Play mic locally
-    source.connect(audioContext.destination);
+    // Amplify local playback so you can hear yourself clearly
+    const gainNode = audioContext.createGain();
+    gainNode.gain.value = 1.5; // adjust volume (1.0 = default, 2.0 = double)
+    source.connect(gainNode);
+    gainNode.connect(audioContext.destination);
 
-    // Create processor to send audio to server
+    // Create processor to send audio to server (unaffected by gain)
     processor = audioContext.createScriptProcessor(2048, 1, 1);
     source.connect(processor);
-    processor.connect(audioContext.destination); // optional if you want local monitoring via processor
+    processor.connect(audioContext.destination); // optional local monitoring
 
     processor.onaudioprocess = function (e) {
       const inputData = e.inputBuffer.getChannelData(0);
