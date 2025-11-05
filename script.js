@@ -1,20 +1,14 @@
-const socket = io();
-const startBtn = document.getElementById("startBtn");
-const statusText = document.getElementById("status");
+// Get the audio context and play mic sound directly to speakers
+async function startMic() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(stream);
+    source.connect(audioContext.destination); // connect mic directly to speaker
+    alert("🎤 Microphone is live! Speak and you'll hear yourself.");
+  } catch (err) {
+    alert("⚠️ Microphone access denied or error: " + err.message);
+  }
+}
 
-startBtn.addEventListener("click", async () => {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const audioContext = new AudioContext();
-  const source = audioContext.createMediaStreamSource(stream);
-  const processor = audioContext.createScriptProcessor(1024, 1, 1);
-
-  source.connect(processor);
-  processor.connect(audioContext.destination);
-
-  processor.onaudioprocess = e => {
-    const data = e.inputBuffer.getChannelData(0);
-    socket.emit("audioData", data);
-  };
-
-  statusText.textContent = "🎙️ Mic is live...";
-});
+document.getElementById("startBtn").addEventListener("click", startMic);
